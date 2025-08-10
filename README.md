@@ -1,6 +1,6 @@
 # SwiftTagger
 
-A command-line tool for automating converting MP3 files to M4A and tagging them with metadata before adding them to Apple Music/iTunes.
+A command-line tool for automating the conversion of MP3 files to M4A, tagging them with metadata, and adding them to Apple Music/iTunes.
 
 ## Requirements
 - macOS with Swift installed
