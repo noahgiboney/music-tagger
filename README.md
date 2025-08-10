@@ -36,7 +36,6 @@ swift run swift-tagger /path/to/music/files --artist "Artist Name" --album "Albu
 ## Notes
 - Only MP3 files are processed; other file types are skipped.
 - The current version assumes a hardcoded path your apple music directory.
-- 
 
 ## License
 MIT License
