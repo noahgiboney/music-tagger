@@ -10,7 +10,8 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "swift-tag", dependencies: [
+            name: "swift-tagger",
+            dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ]
         ),
