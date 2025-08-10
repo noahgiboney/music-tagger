@@ -1,1 +1,3 @@
-# swift-tag
+# Swift Tag
+
+A command line tool 
