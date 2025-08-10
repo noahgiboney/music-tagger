@@ -39,7 +39,7 @@ func addSongToAppleMusic(songFile: URL) throws {
 /// - Parameters:
 ///   - fileURL: The destination of the mp3 file
 ///   - audioMetadata: The metadata to apply on the file
-func convertAndTag(fileURL: URL, audioMetadata: AudtioMetadata) async throws {
+func convertAndTag(fileURL: URL, audioMetadata: AudioMetadata) async throws {
     let asset = AVURLAsset(url: fileURL)
     let exporter = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetAppleM4A)
     

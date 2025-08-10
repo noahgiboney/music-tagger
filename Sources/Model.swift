@@ -8,7 +8,7 @@
 import Foundation
 
 /// Represents metadata fields for an audio file.
-struct AudtioMetadata {
+struct AudioMetadata {
     var fileName: String
     var album: String = ""
     var artist: String

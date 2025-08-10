@@ -58,7 +58,7 @@ struct SwiftTag: AsyncParsableCommand {
                 continue
             }
             
-            let metadata = AudtioMetadata(
+            let metadata = AudioMetadata(
                 fileName: file,
                 album: album,
                 artist: artist,
