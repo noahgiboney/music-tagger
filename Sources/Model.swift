@@ -7,19 +7,26 @@
 
 import Foundation
 
-/// Represents metadata fields for an audio file.
-struct AudioMetadata {
+
+/// /// Represents metadata fields for a single audio file.
+struct Song {
     var fileName: String
+    var metadata: AudioMetadata
+    
+    var title: String {
+        fileName.replacingOccurrences(of: ".mp3", with: "")
+    }
+}
+
+/// Represents metadata fields for a group of audio file.
+struct AudioMetadata {
     var album: String = ""
     var artist: String
     var genre: String
     var coverArtPath: String?
     var isExplict: Bool
-    
-    var title: String {
-        fileName.replacingOccurrences(of: ".mp3", with: "")
-    }
-    
+    var pathToFiles: String
+
     var advisoryValue: NSNumber {
         isExplict ? 1 : 0
     }

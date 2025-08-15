@@ -28,15 +28,9 @@ struct SwiftTag: AsyncParsableCommand {
     
     @Flag(help: "If enabled will mark songs as explict")
     var explicit = false
-
+    
     mutating func run() async throws {
         let fileManager = FileManager.default
-        
-        /* Clean-up on any exit */
-        defer { cleanUp() }
-        
-        /* Create the temporary directory for converted files to be stored */
-        try createTemporaryDirectory()
         
         /* Ensure we can locate the files to do work on */
         guard fileManager.fileExists(atPath: pathToFiles) else {
@@ -44,48 +38,53 @@ struct SwiftTag: AsyncParsableCommand {
             return
         }
         
-        /* Convert all mp3 file to m4a and tag them with appropriate metadata
-         TODO: Use task group to convert songs in parallel
-         */
         let files = try fileManager.contentsOfDirectory(atPath: pathToFiles)
         
-        for file in files {
-            
-            let fileURL = URL(filePath: "\(pathToFiles)/\(file)")
-            
-            if !(fileURL.pathExtension.lowercased() == "mp3") {
-                print("\(file) is not an mp3, skipping")
-                continue
+        let metadata = AudioMetadata(
+            album: album,
+            artist: artist,
+            genre: genre,
+            coverArtPath: cover,
+            isExplict: explicit,
+            pathToFiles: pathToFiles
+        )
+        
+        /* Proccess files in parrallel */
+        await withTaskGroup(of: Void.self) { group in
+            for file in files {
+                group.addTask {
+                    let song = Song(fileName: file, metadata: metadata)
+                    await proccessSong(song)
+                }
             }
             
-            let metadata = AudioMetadata(
-                fileName: file,
-                album: album,
-                artist: artist,
-                genre: genre,
-                coverArtPath: cover,
-                isExplict: explicit
-            )
-            
-            try await convertAndTag(fileURL: fileURL, audioMetadata: metadata)
-        }
-        
-        /* Upload tagged files to apple music/iTunes
-         TODO: Use task group to add songs in parallel
-         */
-        let taggedFiles = try fileManager.contentsOfDirectory(at: getTemporaryDirectory(), includingPropertiesForKeys: [])
-
-        for file in taggedFiles {
-            try addSongToAppleMusic(songFile: file)
+            /* Wait for all songs to procces */
+            await group.waitForAll()
         }
     }
 }
 
-/// Cleans up the proccess by removing the temporary directory
-func cleanUp() {
-    do {
-        try deleteTemporaryDirectory()
-    } catch {
-        print(error)
+/// Proccess a song
+/// - Parameter song: The song to proccess
+func proccessSong(_ song: Song) async {
+    
+    /* Create URL for the song */
+    let fileURL = URL(filePath: "\(song.metadata.pathToFiles)/\(song.fileName)")
+    
+    if !(fileURL.pathExtension.lowercased() == "mp3") {
+        print("\(song.fileName) is not an mp3, skipping")
+        return
     }
+    
+    /* Create location in the apply music library */
+    let songLocation = createSongLocation(fileName: song.fileName)
+    
+    /* Convert mp3 to m4a, tag the file, and upload to apple music library */
+    do {
+        try await uploadSong(fileURL: fileURL, desination: songLocation, song: song)
+    } catch {
+        print("ERROR: Failed to procces \(song.fileName)")
+    }
+    
+    print("Proccessed \(song.fileName)")
 }
