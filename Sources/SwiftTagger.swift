@@ -83,7 +83,8 @@ func proccessSong(_ song: Song) async {
     do {
         try await uploadSong(fileURL: fileURL, desination: songLocation, song: song)
     } catch {
-        print("ERROR: Failed to procces \(song.fileName)")
+        print("ERROR: \(error.localizedDescription)")
+        return
     }
     
     print("Proccessed \(song.fileName)")

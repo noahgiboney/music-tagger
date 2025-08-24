@@ -31,3 +31,14 @@ struct AudioMetadata {
         isExplict ? 1 : 0
     }
 }
+
+enum ProccessError: LocalizedError {
+    case coverArtNotFound(String)
+    
+    var errorDescription: String? {
+        switch self {
+        case .coverArtNotFound(let coverArt):
+            "\(coverArt) not found"
+        }
+    }
+}

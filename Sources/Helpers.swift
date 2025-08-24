@@ -56,8 +56,7 @@ func uploadSong(fileURL: URL, desination: URL, song: Song) async throws {
     if let coverArtPath = audioMetadata.coverArtPath {
         /* Return if cover art is not found */
         guard FileManager.default.fileExists(atPath: coverArtPath) else {
-            print("Cover art not foun ")
-            return
+            throw ProccessError.coverArtNotFound(coverArtPath)
         }
         
         let imageURL = URL(filePath: coverArtPath)
