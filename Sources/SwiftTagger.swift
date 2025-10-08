@@ -77,7 +77,8 @@ func proccessSong(_ song: Song) async {
     }
     
     /* Create location in the apply music library */
-    let songLocation = createSongLocation(fileName: song.fileName)
+    let filename = "\(song.fileName)_\(song.metadata.artist)"
+    let songLocation = createSongLocation(fileName: filename)
     
     /* Convert mp3 to m4a, tag the file, and upload to apple music library */
     do {
