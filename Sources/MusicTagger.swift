@@ -1,6 +1,6 @@
 //
-//  SwiftTagger.swift
-//  swift-tagger
+//  MusicTagger.swift
+//  music-tagger
 //
 //  Created by Noah Giboney on 8/9/25.
 //
@@ -9,7 +9,7 @@ import ArgumentParser
 import Foundation
 
 @main
-struct SwiftTag: AsyncParsableCommand {
+struct MusicTagger: AsyncParsableCommand {
     
     @Argument(help: "The path on your computer to the directory that holds the music files.")
     var pathToFiles: String
@@ -17,7 +17,7 @@ struct SwiftTag: AsyncParsableCommand {
     @Option(help: "The name of the artist.")
     var artist = ""
     
-    @Option(help: "The name of the album.")
+    @Option(help: "The name of the album. Will default to the folder name of the input files.")
     var album = ""
     
     @Option(help: "The genre of the music.")
@@ -29,14 +29,18 @@ struct SwiftTag: AsyncParsableCommand {
     @Flag(help: "If enabled will mark songs as explict")
     var explicit = false
     
+    @Flag(help: "Print debug output")
+    var debug = false
+    
     mutating func run() async throws {
         let fileManager = FileManager.default
         
         /* Ensure we can locate the files to do work on */
         guard fileManager.fileExists(atPath: pathToFiles) else {
-            print("Unable to find path to files")
-            return
+            throw ProccessError.songFilesNotFound(pathToFiles)
         }
+        
+        if debug { print("Debug: Found files at: \(pathToFiles)") }
         
         let files = try fileManager.contentsOfDirectory(atPath: pathToFiles)
         
@@ -46,15 +50,17 @@ struct SwiftTag: AsyncParsableCommand {
             genre: genre,
             coverArtPath: cover,
             isExplict: explicit,
-            pathToFiles: pathToFiles
+            pathToFiles: pathToFiles,
+            debug: debug
         )
+        
+        if debug { print("Debug: Created run metadata: \(metadata)") }
         
         /* Proccess files in parrallel */
         await withTaskGroup(of: Void.self) { group in
             for file in files {
                 group.addTask {
-                    let song = Song(fileName: file, metadata: metadata)
-                    await proccessSong(song)
+                    await proccessSong(file, metadata: metadata)
                 }
             }
             
@@ -66,29 +72,33 @@ struct SwiftTag: AsyncParsableCommand {
 
 /// Proccess a song
 /// - Parameter song: The song to proccess
-func proccessSong(_ song: Song) async {
+func proccessSong(_ songFileName: String, metadata: AudioMetadata) async {
     
     /* Create URL for the song */
-    let fileURL = URL(filePath: "\(song.metadata.pathToFiles)/\(song.fileName)")
+    let fileURL = URL(filePath: "\(metadata.pathToFiles)/\(songFileName)")
     
     if !(fileURL.pathExtension.lowercased() == "mp3") {
-        print("\(song.fileName) is not an mp3, skipping")
+        if metadata.debug { print("Debug: \(songFileName) is not an mp3, skipping")}
         return
     }
     
-    let baseName = song.fileName.components(separatedBy: ".").first ?? song.fileName
+    if metadata.debug { print("Debug: Processing \(songFileName)") }
+    
+    let baseName = songFileName.components(separatedBy: ".").first ?? songFileName
     
     /* Create location in the apply music library */
-    let filename = "\(baseName)_\(song.metadata.artist).mp3"
+    let filename = "\(baseName)_\(metadata.artist).mp3"
     let songLocation = createSongLocation(fileName: filename)
+    
+    if metadata.debug { print("Debug: Created song location at \(songLocation)") }
     
     /* Convert mp3 to m4a, tag the file, and upload to apple music library */
     do {
-        try await uploadSong(fileURL: fileURL, desination: songLocation, song: song)
+        try await uploadSong(fileURL: fileURL, desination: songLocation, metadata: metadata)
     } catch {
-        print("ERROR: \(error.localizedDescription)")
+        print("Error: \(error.localizedDescription)")
         return
     }
     
-    print("Proccessed \(song.fileName)")
+    print("Proccessed: \(songFileName)")
 }
