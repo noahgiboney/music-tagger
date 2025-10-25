@@ -1,4 +1,4 @@
-# SwiftTagger
+# MusicTagger
 
 A command-line tool for automating the conversion of MP3 files to M4A, tagging them with metadata, and adding them to Apple Music/iTunes.
 
@@ -13,7 +13,7 @@ A command-line tool for automating the conversion of MP3 files to M4A, tagging t
 ## Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/swift-tagger.git
+   git clone https://github.com/noahgiboney/music-tagger
    ```
 2. Navigate to the project directory:
    ```bash

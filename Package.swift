@@ -3,14 +3,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "swift-tagger",
+    name: "music-tagger",
     platforms: [.iOS(.v18), .macOS(.v15)],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.3.0")
     ],
     targets: [
         .executableTarget(
-            name: "swift-tagger",
+            name: "music-tagger",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ]
