@@ -58,7 +58,7 @@ func uploadSong(fileURL: URL, desination: URL, metadata: AudioMetadata) async th
     /* Create the image data */
     let coverArt = AVMutableMetadataItem()
     
-    if let coverArtPath = metadata.coverArtPath {
+    if let coverArtPath = metadata.pathToCovertArt {
         /* Return if cover art is not found */
         guard FileManager.default.fileExists(atPath: coverArtPath) else {
             throw ProccessError.coverArtNotFound(coverArtPath)

@@ -17,7 +17,7 @@ A command-line tool for automating the conversion of MP3 files to M4A, tagging t
    ```
 2. Navigate to the project directory:
    ```bash
-   cd swift-tagger
+   cd music-tagger
    ```
 3. Build the project:
    ```bash
@@ -32,13 +32,13 @@ swift run music-tagger /path/to/music/files --artist "Artist Name" --album "Albu
 ```
 
 ### Options
-- `--artist`: Specify the artist name
-- `--album`: Specify the album name
-- `--genre`: Specify the music genre
+Required values can be set using a JSON config file or using the options. Using options will overide the config file if supplied.
+- `--config`: Path to a JSON config file with the three required values
+- `--artist`: Specify the artist name (Required)
+- `--album`: Specify the album name (Required)
+- `--genre`: Specify the music genre (Required)
 - `--cover`: Path to the cover art image
 - `--explicit`: Mark songs as explicit 
-- `--explicit`: Mark songs as explicit
-
 
 ## Notes
 - Only MP3 files are processed; other file types are skipped.

@@ -14,10 +14,13 @@ struct MusicTagger: AsyncParsableCommand {
     @Argument(help: "The path on your computer to the directory that holds the music files.")
     var pathToFiles: String
     
+    @Option(help: "Path to JSON config file to read options from.")
+    var config = ""
+    
     @Option(help: "The name of the artist.")
     var artist = ""
     
-    @Option(help: "The name of the album. Will default to the folder name of the input files.")
+    @Option(help: "The name of the album.")
     var album = ""
     
     @Option(help: "The genre of the music.")
@@ -44,23 +47,40 @@ struct MusicTagger: AsyncParsableCommand {
         
         let files = try fileManager.contentsOfDirectory(atPath: pathToFiles)
         
-        let metadata = AudioMetadata(
-            album: album,
-            artist: artist,
-            genre: genre,
-            coverArtPath: cover,
-            isExplict: explicit,
-            pathToFiles: pathToFiles,
-            debug: debug
-        )
+        var metadata: AudioMetadata
+        
+        if let config = try parseConfig(pathToConfig: config, debug: debug) {
+            // Option flags will override config if supplied
+            
+            metadata = AudioMetadata(
+                album: album.isEmpty ? config.album : album,
+                artist: artist.isEmpty ? config.artist : artist,
+                genre: genre.isEmpty ? config.genre : genre,
+                pathToCovertArt: cover == nil ? NSString(string: config.pathToCoverArt ?? "").expandingTildeInPath : cover,
+                isExplict: explicit,
+                pathToFiles: pathToFiles,
+                debug: debug
+            )
+        } else {
+            metadata = AudioMetadata(
+                album: album,
+                artist: artist,
+                genre: genre,
+                pathToCovertArt: cover,
+                isExplict: explicit,
+                pathToFiles: pathToFiles,
+                debug: debug
+            )
+        }
         
         if debug { print("Debug: Created run metadata: \(metadata)") }
         
         /* Proccess files in parrallel */
         await withTaskGroup(of: Void.self) { group in
             for file in files {
+                let localMetadata = metadata
                 group.addTask {
-                    await proccessSong(file, metadata: metadata)
+                    await proccessSong(file, metadata: localMetadata)
                 }
             }
             
@@ -101,4 +121,33 @@ func proccessSong(_ songFileName: String, metadata: AudioMetadata) async {
     }
     
     print("Proccessed: \(songFileName)")
+}
+
+/// Parse a music-tagger `Config` file for its values
+/// - Parameters:
+///   - pathToConfig: The path to the JSON config file.
+///   - debug: Boolean if debug statements should be printed.
+/// - Returns: Optional config model.
+private func parseConfig(pathToConfig: String, debug: Bool) throws -> Config? {
+    guard !pathToConfig.isEmpty else { return nil }
+    
+    /* Ensure we can locate the config file */
+    guard FileManager.default.fileExists(atPath: pathToConfig) else {
+        throw ProccessError.configNotFound(pathToConfig)
+    }
+    
+    let configURL = URL(filePath: pathToConfig)
+    
+    if debug { print("Debug: Located config URL: \(configURL)") }
+    
+    do {
+        // Attempt to download and decode the supplied config file
+        if debug { print("Debug: Attempting to get config data") }
+        let data = try Data(contentsOf: configURL)
+        
+        if debug { print("Debug: Attempting to decode config data") }
+        return try JSONDecoder().decode(Config.self, from: data)
+    } catch {
+        throw ProccessError.configDecoding
+    }
 }

@@ -12,7 +12,7 @@ struct AudioMetadata {
     var album: String = ""
     var artist: String
     var genre: String
-    var coverArtPath: String?
+    var pathToCovertArt: String?
     var isExplict: Bool
     var pathToFiles: String
     var debug: Bool
