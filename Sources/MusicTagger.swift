@@ -7,6 +7,7 @@
 
 import ArgumentParser
 import Foundation
+import MusicKit
 
 @main
 struct MusicTagger: AsyncParsableCommand {
@@ -50,8 +51,8 @@ struct MusicTagger: AsyncParsableCommand {
         var metadata: AudioMetadata
         
         if let config = try parseConfig(pathToConfig: config, debug: debug) {
-            // Option flags will override config if supplied
             
+            // Option flags will override config if supplied
             metadata = AudioMetadata(
                 album: album.isEmpty ? config.album : album,
                 artist: artist.isEmpty ? config.artist : artist,
@@ -79,9 +80,7 @@ struct MusicTagger: AsyncParsableCommand {
         await withTaskGroup(of: Void.self) { group in
             for file in files {
                 let localMetadata = metadata
-                group.addTask {
-                    await proccessSong(file, metadata: localMetadata)
-                }
+                group.addTask { await proccessSongFile(file, metadata: localMetadata) }
             }
             
             /* Wait for all songs to procces */
@@ -92,7 +91,7 @@ struct MusicTagger: AsyncParsableCommand {
 
 /// Proccess a song
 /// - Parameter song: The song to proccess
-func proccessSong(_ songFileName: String, metadata: AudioMetadata) async {
+func proccessSongFile(_ songFileName: String, metadata: AudioMetadata) async {
     
     /* Create URL for the song */
     let fileURL = URL(filePath: "\(metadata.pathToFiles)/\(songFileName)")
@@ -104,23 +103,23 @@ func proccessSong(_ songFileName: String, metadata: AudioMetadata) async {
     
     if metadata.debug { print("Debug: Processing \(songFileName)") }
     
-    let baseName = songFileName.components(separatedBy: ".").first ?? songFileName
+    let songTitle = fileURL.deletingPathExtension().lastPathComponent
     
     /* Create location in the apply music library */
-    let filename = "\(baseName)_\(metadata.artist).mp3"
+    let filename = "\(songTitle)_\(metadata.artist).mp3"
     let songLocation = createSongLocation(fileName: filename)
     
     if metadata.debug { print("Debug: Created song location at \(songLocation)") }
     
     /* Convert mp3 to m4a, tag the file, and upload to apple music library */
     do {
-        try await uploadSong(fileURL: fileURL, desination: songLocation, metadata: metadata)
+        try await uploadSong(songTitle: songTitle, fileURL: fileURL, desination: songLocation, metadata: metadata)
     } catch {
         print("Error: \(error.localizedDescription)")
         return
     }
     
-    print("Proccessed: \(songFileName)")
+    print("Proccessed file: \(songFileName)")
 }
 
 /// Parse a music-tagger `Config` file for its values
