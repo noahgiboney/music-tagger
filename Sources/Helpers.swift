@@ -13,12 +13,10 @@ import AVFoundation
 ///   - fileURL: The song URL
 ///   - desination: The URL destination of the song
 ///   - song: The song to process
-func uploadSong(fileURL: URL, desination: URL, metadata: AudioMetadata) async throws {
+func uploadSong(songTitle: String, fileURL: URL, desination: URL, metadata: AudioMetadata) async throws {
     let asset = AVURLAsset(url: fileURL)
     
     let exporter = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetAppleM4A)
-    
-    let songTitle = fileURL.deletingLastPathComponent().lastPathComponent
     
     if metadata.debug { print("Debug: Setting metadata for \(songTitle)")}
     
